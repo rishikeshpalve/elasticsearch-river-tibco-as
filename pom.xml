@@ -16,7 +16,7 @@
 		<repository>
 			<id>rpalve</id>
 			<name>Developer Repository</name>
-			<url>file:///D:/Rishi/mavenrepository</url>
+			<url>file:///E:/Rishi/mavenrepository</url>
 		</repository>
 	</repositories>
 	
