@@ -2,12 +2,16 @@ package org.elasticsearch.river.tibcoas;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.Loggers;
 
 import com.tibco.as.space.ASException;
 import com.tibco.as.space.Tuple;
@@ -19,6 +23,7 @@ import com.tibco.as.space.event.TakeEvent;
 
 public class EventProcesserAndIndexer implements Runnable
 {
+	private static final ESLogger logger = Loggers.getLogger(EventProcesserAndIndexer.class);
 	private final Client esClient;
 	private final ActiveSpacesRiverDefinition definition;
 	private final ActiveSpacesClientService activeSpacesClientService;
@@ -91,6 +96,21 @@ public class EventProcesserAndIndexer implements Runnable
 	{
 		Tuple tuple = putEvent.getTuple();
 		Collection<String> fieldNames = tuple.getFieldNames();
+
+		if(definition.getExcludeFields() != null)
+		{
+			Set<String> excludeFields = new HashSet<String>();
+			excludeFields = definition.getExcludeFields();
+			for (String excludeField : excludeFields)
+			{
+				boolean remove = fieldNames.remove(excludeField);
+				if(!remove)
+				{
+					logger.info("Cannot exclude field  : [excludeField]... Field not found in Tuple!");
+				}
+			}
+		}
+		
 		Map<String, Object> json = new HashMap<String, Object>();
 		
 		for (String field : fieldNames) 
