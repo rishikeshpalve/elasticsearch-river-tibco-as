@@ -1,6 +1,9 @@
 package org.elasticsearch.river.tibcoas;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.elasticsearch.common.base.Preconditions;
 import org.elasticsearch.common.logging.ESLogger;
@@ -18,6 +21,7 @@ public class ActiveSpacesRiverDefinition
 	private static final String DEFAULT_METASPACE_NAME = null;
 	private static final String DEFAULT_SPACE_NAME = null;
 	private static final boolean DEFAULT_INITIAL_IMPORT = true;
+	private static final String DEFAULT_EXCLUDE_FIELDS = null;
 	
 	private static final String INDEX_OBJECT = "index";
 	private static final String NAME_FIELD = "name";
@@ -25,6 +29,7 @@ public class ActiveSpacesRiverDefinition
 	
 	private static final String OPTIONS_OBJECT = "options";
 	private static final String SKIP_IMPORT_FIELD = "skip_initial_import";
+	private static final String EXCLUDE_FIELDS_FIELD = "exclude_fields";
 	
 	private static final String AS_OBJECT = "activespaces";
 	private static final String AS_DISCOVERY_FIELD = "discovery";
@@ -42,6 +47,7 @@ public class ActiveSpacesRiverDefinition
 	private String memberName;
 	private String spaceName;
 	private boolean initialImport;
+	private Set<String> excludeFields;
 	
 	public ActiveSpacesRiverDefinition(final Builder builder) 
 	{
@@ -53,6 +59,7 @@ public class ActiveSpacesRiverDefinition
 		this.listenURL = builder.listenURL;
 		this.memberName = builder.memberName;
 		this.spaceName = builder.spaceName;
+		this.setExcludeFields(builder.excludeFields);
 	}
 
 	
@@ -67,6 +74,7 @@ public class ActiveSpacesRiverDefinition
 		private String memberName;
 		private String spaceName;
 		private boolean initialImport;
+		private Set<String> excludeFields;
 		
 		public Builder riverName(String riverName)
 		{
@@ -122,6 +130,12 @@ public class ActiveSpacesRiverDefinition
 			return this;
 		}
 		
+		public Builder excludeFields(Set<String> excludeFields) 
+		{
+			this.excludeFields = excludeFields;
+			return this;
+		}
+
 		public ActiveSpacesRiverDefinition build()
 		{
 			return new ActiveSpacesRiverDefinition(this);
@@ -154,6 +168,24 @@ public class ActiveSpacesRiverDefinition
 		{
 			Map<String, Object> optionsSettings = (Map<String, Object>) riverSettings.settings().get(OPTIONS_OBJECT);
 			builder.initialImport = !(XContentMapValues.nodeBooleanValue(optionsSettings.get(SKIP_IMPORT_FIELD), DEFAULT_INITIAL_IMPORT));
+			if(optionsSettings.containsKey(EXCLUDE_FIELDS_FIELD)) 
+			{
+				Set<String> excludeFields = new HashSet<String>();
+                Object excludeFieldsSettings = optionsSettings.get(EXCLUDE_FIELDS_FIELD);
+                logger.trace("excludeFieldsSettings: " + excludeFieldsSettings);
+                boolean array = XContentMapValues.isArray(excludeFieldsSettings);
+
+                if (array) 
+                {
+                    ArrayList<String> fields = (ArrayList<String>) excludeFieldsSettings;
+                    for (String field : fields) 
+                    {
+                        logger.trace("Field: " + field);
+                        excludeFields.add(field);
+                    }
+                }
+                builder.excludeFields = excludeFields;
+			}
 		}
 		else
 		{
@@ -292,6 +324,14 @@ public class ActiveSpacesRiverDefinition
 
 	public void setInitialImport(boolean initialImport) {
 		this.initialImport = initialImport;
+	}
+
+	public Set<String> getExcludeFields() {
+		return excludeFields;
+	}
+
+	public void setExcludeFields(Set<String> excludeFields) {
+		this.excludeFields = excludeFields;
 	}
 
 }
