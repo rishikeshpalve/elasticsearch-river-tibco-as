@@ -23,6 +23,7 @@ public class ActiveSpacesRiverDefinition
 	private static final String DEFAULT_SPACE_NAME = null;
 	private static final boolean DEFAULT_INITIAL_IMPORT = true;
 	private static final Set<String> DEFAULT_EXCLUDE_FIELDS = null;
+	private static final String DEFAULT_FILTER_STRING = "";
 	
 	private static final String INDEX_OBJECT = "index";
 	private static final String NAME_FIELD = "name";
@@ -31,6 +32,7 @@ public class ActiveSpacesRiverDefinition
 	private static final String OPTIONS_OBJECT = "options";
 	private static final String SKIP_IMPORT_FIELD = "skip_initial_import";
 	private static final String EXCLUDE_FIELDS_FIELD = "exclude_fields";
+	private static final String FILTER_FIELD = "filter";
 	
 	private static final String AS_OBJECT = "activespaces";
 	private static final String AS_DISCOVERY_FIELD = "discovery";
@@ -49,6 +51,7 @@ public class ActiveSpacesRiverDefinition
 	private String spaceName;
 	private boolean initialImport;
 	private Set<String> excludeFields;
+	private String filterString;
 	
 	public ActiveSpacesRiverDefinition(final Builder builder) 
 	{
@@ -61,6 +64,8 @@ public class ActiveSpacesRiverDefinition
 		this.setMemberName(builder.memberName);
 		this.setSpaceName(builder.spaceName);
 		this.setExcludeFields(builder.excludeFields);
+		this.setInitialImport(builder.initialImport);
+		this.setFilterString(builder.filterString);
 	}
 
 	
@@ -76,65 +81,61 @@ public class ActiveSpacesRiverDefinition
 		private String spaceName;
 		private boolean initialImport;
 		private Set<String> excludeFields;
+		private String filterString;
 		
-		public Builder riverName(String riverName)
+		public void setRiverName(String riverName)
 		{
 			this.riverName = riverName;
-			return this;
 		}
 		
-		public Builder indexName(String indexName)
+		public void setIndexName(String indexName)
 		{
-			this.indexName = indexName;
-			return this;
+			this.indexName = indexName;			
 		}
 		
-		public Builder typeName(String typeName)
+		public void setTypeName(String typeName)
 		{
-			this.typeName = typeName;
-			return this;
+			this.typeName = typeName;			
 		}
 		
-		public Builder metaspaceName(String metaspaceName)
+		public void setMetaspaceName(String metaspaceName)
 		{
-			this.metaspaceName = metaspaceName;
-			return this;
+			this.metaspaceName = metaspaceName;			
 		}
 		
-		public Builder discoveryURL(String discoveryURL)
+		public void setDiscoveryURL(String discoveryURL)
 		{
-			this.discoveryURL = discoveryURL;
-			return this;
+			this.discoveryURL = discoveryURL;			
 		}
 		
-		public Builder listenURL(String listenURL)
+		public void setListenURL(String listenURL)
 		{
-			this.listenURL = listenURL;
-			return this;
+			this.listenURL = listenURL;			
 		}
 		
-		public Builder memberName(String memberName)
+		public void setMemberName(String memberName)
 		{
-			this.memberName = memberName;
-			return this;
+			this.memberName = memberName;		
 		}
 		
-		public Builder spaceName(String spaceName)
+		public void setSpaceName(String spaceName)
 		{
-			this.spaceName = spaceName;
-			return this;
+			this.spaceName = spaceName;			
 		}
 		
-		public Builder initialImport(boolean initialImport)
+		public void setInitialImport(boolean initialImport)
 		{
-			this.initialImport = initialImport;
-			return this;
+			this.initialImport = initialImport;			
 		}
 		
-		public Builder excludeFields(Set<String> excludeFields) 
+		public void setExcludeFields(Set<String> excludeFields) 
 		{
-			this.excludeFields = excludeFields;
-			return this;
+			this.excludeFields = excludeFields;			
+		}
+		
+		public void setFilterString(String filterString)
+		{
+			this.filterString = filterString;			
 		}
 
 		public ActiveSpacesRiverDefinition build()
@@ -156,19 +157,20 @@ public class ActiveSpacesRiverDefinition
 		if(riverSettings.settings().containsKey(INDEX_OBJECT))
 		{
 			Map<String, Object> indexSettings = (Map<String, Object>) riverSettings.settings().get(INDEX_OBJECT);
-			builder.indexName(XContentMapValues.nodeStringValue(indexSettings.get(NAME_FIELD), DEFAULT_INDEX_NAME));
-			builder.typeName(XContentMapValues.nodeStringValue(indexSettings.get(TYPE_FIELD), DEFAULT_TYPE_NAME));
+			builder.setIndexName(XContentMapValues.nodeStringValue(indexSettings.get(NAME_FIELD), DEFAULT_INDEX_NAME));
+			builder.setTypeName(XContentMapValues.nodeStringValue(indexSettings.get(TYPE_FIELD), DEFAULT_TYPE_NAME));
 		}
 		else
 		{
-			builder.indexName(DEFAULT_INDEX_NAME);
-			builder.typeName(DEFAULT_TYPE_NAME);
+			builder.setIndexName(DEFAULT_INDEX_NAME);
+			builder.setTypeName(DEFAULT_TYPE_NAME);
 		}
 		
 		if(riverSettings.settings().containsKey(OPTIONS_OBJECT))
 		{
 			Map<String, Object> optionsSettings = (Map<String, Object>) riverSettings.settings().get(OPTIONS_OBJECT);
-			builder.initialImport(!(XContentMapValues.nodeBooleanValue(optionsSettings.get(SKIP_IMPORT_FIELD), false)));
+			builder.setInitialImport(!(XContentMapValues.nodeBooleanValue(optionsSettings.get(SKIP_IMPORT_FIELD), false)));
+			builder.setFilterString(XContentMapValues.nodeStringValue(optionsSettings.get(FILTER_FIELD), DEFAULT_FILTER_STRING));
 			if(optionsSettings.containsKey(EXCLUDE_FIELDS_FIELD)) 
 			{
 				Set<String> excludeFields = new HashSet<String>();
@@ -185,16 +187,17 @@ public class ActiveSpacesRiverDefinition
                         excludeFields.add(field);
                     }
                 }
-                builder.excludeFields(excludeFields);
+                builder.setExcludeFields(excludeFields);
 			}
 			else
 			{
-				builder.excludeFields(DEFAULT_EXCLUDE_FIELDS);
+				builder.setExcludeFields(DEFAULT_EXCLUDE_FIELDS);
 			}
 		}
 		else
 		{
-			builder.initialImport(DEFAULT_INITIAL_IMPORT);
+			builder.setInitialImport(DEFAULT_INITIAL_IMPORT);
+			builder.setFilterString(DEFAULT_FILTER_STRING);
 		}
 		
 		if(riverSettings.settings().containsKey(AS_OBJECT))
@@ -203,56 +206,56 @@ public class ActiveSpacesRiverDefinition
 			
 			if(asSettings.containsKey(AS_DISCOVERY_FIELD))
 			{
-				builder.discoveryURL(XContentMapValues.nodeStringValue(asSettings.get(AS_DISCOVERY_FIELD), DEFAULT_DISCOVERY_URL));
+				builder.setDiscoveryURL(XContentMapValues.nodeStringValue(asSettings.get(AS_DISCOVERY_FIELD), DEFAULT_DISCOVERY_URL));
 				Preconditions.checkNotNull(builder.discoveryURL, "TIBCO Activespaces : Discovery URL is null");
 			}
 			else
 			{
 				logger.error("TIBCO Activespaces : Discovery URL is not specified");
-				builder.discoveryURL(DEFAULT_DISCOVERY_URL);
+				builder.setDiscoveryURL(DEFAULT_DISCOVERY_URL);
 			}
 			
 			if(asSettings.containsKey(AS_LISTEN_FIELD))
 			{
-				builder.listenURL(XContentMapValues.nodeStringValue(asSettings.get(AS_LISTEN_FIELD), DEFAULT_LISTEN_URL));
+				builder.setListenURL(XContentMapValues.nodeStringValue(asSettings.get(AS_LISTEN_FIELD), DEFAULT_LISTEN_URL));
 				Preconditions.checkNotNull(builder.listenURL, "TIBCO Activespaces : Listen URL is null");
 			}
 			else
 			{
 				logger.error("TIBCO Activespaces : Listen URL is not specified");
-				builder.listenURL(DEFAULT_LISTEN_URL);
+				builder.setListenURL(DEFAULT_LISTEN_URL);
 			}
 			
 			if(asSettings.containsKey(AS_METASPACE_FIELD))
 			{
-				builder.metaspaceName(XContentMapValues.nodeStringValue(asSettings.get(AS_METASPACE_FIELD), DEFAULT_METASPACE_NAME));
+				builder.setMetaspaceName(XContentMapValues.nodeStringValue(asSettings.get(AS_METASPACE_FIELD), DEFAULT_METASPACE_NAME));
 				Preconditions.checkNotNull(builder.metaspaceName, "TIBCO Activespaces : Metaspace Name is null");
 			}
 			else
 			{
 				logger.error("TIBCO Activespaces : Metaspace Name is not specified");
-				builder.metaspaceName(DEFAULT_METASPACE_NAME);
+				builder.setMetaspaceName(DEFAULT_METASPACE_NAME);
 			}
 			
 			if(asSettings.containsKey(AS_SPACE_FIELD))
 			{
-				builder.spaceName(XContentMapValues.nodeStringValue(asSettings.get(AS_SPACE_FIELD), DEFAULT_SPACE_NAME));
+				builder.setSpaceName(XContentMapValues.nodeStringValue(asSettings.get(AS_SPACE_FIELD), DEFAULT_SPACE_NAME));
 				Preconditions.checkNotNull(builder.spaceName, "TIBCO Activespaces : Space Name is null");
 			}
 			else
 			{
 				logger.error("TIBCO Activespaces : Space Name is not specified");
-				builder.spaceName(DEFAULT_SPACE_NAME);
+				builder.setSpaceName(DEFAULT_SPACE_NAME);
 			}
 			
 			if(asSettings.containsKey(AS_MEMBER_FIELD))
 			{
-				builder.memberName(XContentMapValues.nodeStringValue(asSettings.get("member"), riverName));
+				builder.setMemberName(XContentMapValues.nodeStringValue(asSettings.get("member"), riverName));
 			}
 			else
 			{
 				logger.info("TIBCO Activespaces : Member Name is not specified. Using river name : {}", riverName);
-				builder.memberName(riverName);
+				builder.setMemberName(riverName);
 			}
 		}
 		
@@ -337,6 +340,14 @@ public class ActiveSpacesRiverDefinition
 
 	public void setExcludeFields(Set<String> excludeFields) {
 		this.excludeFields = excludeFields;
+	}
+
+	public String getFilterString() {
+		return filterString;
+	}
+
+	public void setFilterString(String filterString) {
+		this.filterString = filterString;
 	}
 
 }

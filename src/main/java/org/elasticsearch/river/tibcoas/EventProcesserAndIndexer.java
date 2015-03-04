@@ -95,6 +95,7 @@ public class EventProcesserAndIndexer implements Runnable
 	private void onPutEvent(PutEvent putEvent)
 	{
 		Tuple tuple = putEvent.getTuple();
+		String id = formId(tuple);
 		Collection<String> fieldNames = tuple.getFieldNames();
 
 		if(definition.getExcludeFields() != null)
@@ -118,7 +119,7 @@ public class EventProcesserAndIndexer implements Runnable
 			//FieldDef.FieldType fieldType = tuple.getFieldType(field);
 			json.put(field, tuple.get(field));
 		}
-		String id = formId(tuple);
+		
 		IndexRequest indexRequest = new IndexRequest(definition.getIndexName(), definition.getTypeName(), id)
 										.source(json);
 		UpdateRequest updateRequest = new UpdateRequest(definition.getIndexName(), definition.getTypeName(), id)
@@ -161,10 +162,10 @@ public class EventProcesserAndIndexer implements Runnable
 	private String formId(Tuple tuple)
 	{
 		StringBuilder id = new StringBuilder(""); 
-		for (String field : keyFieldNames)
+		for (String keyField : keyFieldNames)
 		{
 			id.append("_");
-			id.append(tuple.get(field));
+			id.append(tuple.get(keyField));
 		}
 		return id.toString();
 	}

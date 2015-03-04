@@ -54,7 +54,7 @@ public class ActiveSpacesClientService
 		
 		try 
 		{
-			eventBrowser = space.browseEvents(eventBrowserDef);
+			eventBrowser = space.browseEvents(eventBrowserDef, definition.getFilterString());
 		} 
 		catch (ASException e) 
 		{
