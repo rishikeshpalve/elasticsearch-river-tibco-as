@@ -36,10 +36,21 @@ public class ActiveSpacesClientService
 	public EventBrowser getEventBrowser()
 	{
 		EventBrowser eventBrowser = null;
-		EventBrowserDef eventBrowserDef = EventBrowserDef.create().setTimeScope(EventBrowserDef.TimeScope.ALL)
+		EventBrowserDef eventBrowserDef = null;
+		if(definition.isInitialImport())
+		{
+			eventBrowserDef = EventBrowserDef.create().setTimeScope(EventBrowserDef.TimeScope.ALL)
 				.setDistributionScope(EventBrowserDef.DistributionScope.ALL)
 				.setTimeout(EventBrowserDef.WAIT_FOREVER)
 				.setQueryLimit(-1);
+		}
+		else
+		{
+			eventBrowserDef = EventBrowserDef.create().setTimeScope(EventBrowserDef.TimeScope.NEW)
+					.setDistributionScope(EventBrowserDef.DistributionScope.ALL)
+					.setTimeout(EventBrowserDef.WAIT_FOREVER)
+					.setQueryLimit(-1);
+		}
 		
 		try 
 		{

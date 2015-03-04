@@ -15,13 +15,14 @@ public class ActiveSpacesRiverDefinition
 {
 	private static final ESLogger logger = Loggers.getLogger(ActiveSpacesRiverDefinition.class);
 	
+	private static final String DEFAULT_INDEX_NAME = "activespaces";
 	private static final String DEFAULT_TYPE_NAME = "activespaces";
 	private static final String DEFAULT_DISCOVERY_URL = null;
 	private static final String DEFAULT_LISTEN_URL = null;
 	private static final String DEFAULT_METASPACE_NAME = null;
 	private static final String DEFAULT_SPACE_NAME = null;
 	private static final boolean DEFAULT_INITIAL_IMPORT = true;
-	private static final String DEFAULT_EXCLUDE_FIELDS = null;
+	private static final Set<String> DEFAULT_EXCLUDE_FIELDS = null;
 	
 	private static final String INDEX_OBJECT = "index";
 	private static final String NAME_FIELD = "name";
@@ -51,14 +52,14 @@ public class ActiveSpacesRiverDefinition
 	
 	public ActiveSpacesRiverDefinition(final Builder builder) 
 	{
-		this.riverName = builder.riverName;
-		this.indexName = builder.indexName;
-		this.typeName = builder.typeName;
-		this.metaspaceName = builder.metaspaceName;
-		this.discoveryURL = builder.discoveryURL;
-		this.listenURL = builder.listenURL;
-		this.memberName = builder.memberName;
-		this.spaceName = builder.spaceName;
+		this.setRiverName(builder.riverName);
+		this.setIndexName(builder.indexName);
+		this.setTypeName(builder.typeName);
+		this.setMetaspaceName(builder.metaspaceName);
+		this.setDiscoveryURL(builder.discoveryURL);
+		this.setListenURL(builder.listenURL);
+		this.setMemberName(builder.memberName);
+		this.setSpaceName(builder.spaceName);
 		this.setExcludeFields(builder.excludeFields);
 	}
 
@@ -155,24 +156,24 @@ public class ActiveSpacesRiverDefinition
 		if(riverSettings.settings().containsKey(INDEX_OBJECT))
 		{
 			Map<String, Object> indexSettings = (Map<String, Object>) riverSettings.settings().get(INDEX_OBJECT);
-			builder.indexName = XContentMapValues.nodeStringValue(indexSettings.get(NAME_FIELD), riverName);
-			builder.typeName = XContentMapValues.nodeStringValue(indexSettings.get(TYPE_FIELD), DEFAULT_TYPE_NAME);
+			builder.indexName(XContentMapValues.nodeStringValue(indexSettings.get(NAME_FIELD), DEFAULT_INDEX_NAME));
+			builder.typeName(XContentMapValues.nodeStringValue(indexSettings.get(TYPE_FIELD), DEFAULT_TYPE_NAME));
 		}
 		else
 		{
-			builder.indexName = riverName;
-			builder.typeName = DEFAULT_TYPE_NAME;
+			builder.indexName(DEFAULT_INDEX_NAME);
+			builder.typeName(DEFAULT_TYPE_NAME);
 		}
 		
 		if(riverSettings.settings().containsKey(OPTIONS_OBJECT))
 		{
 			Map<String, Object> optionsSettings = (Map<String, Object>) riverSettings.settings().get(OPTIONS_OBJECT);
-			builder.initialImport = !(XContentMapValues.nodeBooleanValue(optionsSettings.get(SKIP_IMPORT_FIELD), DEFAULT_INITIAL_IMPORT));
+			builder.initialImport(!(XContentMapValues.nodeBooleanValue(optionsSettings.get(SKIP_IMPORT_FIELD), false)));
 			if(optionsSettings.containsKey(EXCLUDE_FIELDS_FIELD)) 
 			{
 				Set<String> excludeFields = new HashSet<String>();
                 Object excludeFieldsSettings = optionsSettings.get(EXCLUDE_FIELDS_FIELD);
-                logger.trace("excludeFieldsSettings: " + excludeFieldsSettings);
+                logger.info("excludeFieldsSettings: " + excludeFieldsSettings);
                 boolean array = XContentMapValues.isArray(excludeFieldsSettings);
 
                 if (array) 
@@ -184,12 +185,16 @@ public class ActiveSpacesRiverDefinition
                         excludeFields.add(field);
                     }
                 }
-                builder.excludeFields = excludeFields;
+                builder.excludeFields(excludeFields);
+			}
+			else
+			{
+				builder.excludeFields(DEFAULT_EXCLUDE_FIELDS);
 			}
 		}
 		else
 		{
-			builder.initialImport = DEFAULT_INITIAL_IMPORT;
+			builder.initialImport(DEFAULT_INITIAL_IMPORT);
 		}
 		
 		if(riverSettings.settings().containsKey(AS_OBJECT))
@@ -198,56 +203,56 @@ public class ActiveSpacesRiverDefinition
 			
 			if(asSettings.containsKey(AS_DISCOVERY_FIELD))
 			{
-				builder.discoveryURL = XContentMapValues.nodeStringValue(asSettings.get(AS_DISCOVERY_FIELD), DEFAULT_DISCOVERY_URL);
-				Preconditions.checkNotNull(builder.discoveryURL, "TIBCO Activespaces : Discovery URL is not specified");
+				builder.discoveryURL(XContentMapValues.nodeStringValue(asSettings.get(AS_DISCOVERY_FIELD), DEFAULT_DISCOVERY_URL));
+				Preconditions.checkNotNull(builder.discoveryURL, "TIBCO Activespaces : Discovery URL is null");
 			}
 			else
 			{
 				logger.error("TIBCO Activespaces : Discovery URL is not specified");
-				builder.discoveryURL = DEFAULT_DISCOVERY_URL;
+				builder.discoveryURL(DEFAULT_DISCOVERY_URL);
 			}
 			
 			if(asSettings.containsKey(AS_LISTEN_FIELD))
 			{
-				builder.listenURL = XContentMapValues.nodeStringValue(asSettings.get(AS_LISTEN_FIELD), DEFAULT_LISTEN_URL);
-				Preconditions.checkNotNull(builder.listenURL, "TIBCO Activespaces : Listen URL is not specified");
+				builder.listenURL(XContentMapValues.nodeStringValue(asSettings.get(AS_LISTEN_FIELD), DEFAULT_LISTEN_URL));
+				Preconditions.checkNotNull(builder.listenURL, "TIBCO Activespaces : Listen URL is null");
 			}
 			else
 			{
 				logger.error("TIBCO Activespaces : Listen URL is not specified");
-				builder.listenURL = DEFAULT_LISTEN_URL;
+				builder.listenURL(DEFAULT_LISTEN_URL);
 			}
 			
 			if(asSettings.containsKey(AS_METASPACE_FIELD))
 			{
-				builder.metaspaceName = XContentMapValues.nodeStringValue(asSettings.get(AS_METASPACE_FIELD), DEFAULT_METASPACE_NAME);
-				Preconditions.checkNotNull(builder.metaspaceName, "TIBCO Activespaces : Metaspace Name is not specified");
+				builder.metaspaceName(XContentMapValues.nodeStringValue(asSettings.get(AS_METASPACE_FIELD), DEFAULT_METASPACE_NAME));
+				Preconditions.checkNotNull(builder.metaspaceName, "TIBCO Activespaces : Metaspace Name is null");
 			}
 			else
 			{
 				logger.error("TIBCO Activespaces : Metaspace Name is not specified");
-				builder.metaspaceName = DEFAULT_METASPACE_NAME;
+				builder.metaspaceName(DEFAULT_METASPACE_NAME);
 			}
 			
 			if(asSettings.containsKey(AS_SPACE_FIELD))
 			{
-				builder.spaceName = XContentMapValues.nodeStringValue(asSettings.get(AS_SPACE_FIELD), DEFAULT_SPACE_NAME);
-				Preconditions.checkNotNull(builder.spaceName, "TIBCO Activespaces : Space Name is not specified");
+				builder.spaceName(XContentMapValues.nodeStringValue(asSettings.get(AS_SPACE_FIELD), DEFAULT_SPACE_NAME));
+				Preconditions.checkNotNull(builder.spaceName, "TIBCO Activespaces : Space Name is null");
 			}
 			else
 			{
 				logger.error("TIBCO Activespaces : Space Name is not specified");
-				builder.spaceName = DEFAULT_SPACE_NAME;
+				builder.spaceName(DEFAULT_SPACE_NAME);
 			}
 			
 			if(asSettings.containsKey(AS_MEMBER_FIELD))
 			{
-				builder.memberName = XContentMapValues.nodeStringValue(asSettings.get("member"), riverName);
+				builder.memberName(XContentMapValues.nodeStringValue(asSettings.get("member"), riverName));
 			}
 			else
 			{
-				logger.info("TIBCO Activespaces : Member Name is not specified");
-				builder.memberName = riverName;
+				logger.info("TIBCO Activespaces : Member Name is not specified. Using river name : {}", riverName);
+				builder.memberName(riverName);
 			}
 		}
 		
