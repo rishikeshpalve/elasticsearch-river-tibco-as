@@ -26,10 +26,9 @@ public class EventProcesserAndIndexer implements Runnable
 	private static final ESLogger logger = Loggers.getLogger(EventProcesserAndIndexer.class);
 	private final Client esClient;
 	private final ActiveSpacesRiverDefinition definition;
-	private final ActiveSpacesClientService activeSpacesClientService;
 	private final SharedContext context;
-	private EventBrowser eventBrowser;
-	private Collection<String> keyFieldNames;
+	private final EventBrowser eventBrowser;
+	private final Collection<String> keyFieldNames;
 
 	public EventProcesserAndIndexer(Client esClient,
 			ActiveSpacesRiverDefinition definition, SharedContext context,
@@ -38,8 +37,8 @@ public class EventProcesserAndIndexer implements Runnable
 		this.esClient = esClient;
 		this.definition = definition;
 		this.context = context;
-		this.activeSpacesClientService = activeSpacesClientService;
-		
+		this.keyFieldNames = activeSpacesClientService.keyFieldNames;
+		this.eventBrowser = activeSpacesClientService.eventBrowser;
 	}
 
 	@Override
@@ -50,10 +49,7 @@ public class EventProcesserAndIndexer implements Runnable
 			SpaceEvent event;
 			try 
 			{
-				keyFieldNames = activeSpacesClientService.getKeyFieldNames();
-				eventBrowser = activeSpacesClientService.getEventBrowser();
-				
-				while ((event = eventBrowser.next()) != null) 
+				while ((eventBrowser != null) && ((event = eventBrowser.next()) != null)) 
 				{
 					switch (event.getType())
 			        {

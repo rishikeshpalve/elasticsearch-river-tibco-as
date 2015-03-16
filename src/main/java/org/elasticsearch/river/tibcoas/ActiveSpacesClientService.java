@@ -25,15 +25,19 @@ public class ActiveSpacesClientService
 	private final ActiveSpacesRiverDefinition definition;
 	private final Metaspace metaspace;
 	private final Space space;
+	protected final EventBrowser eventBrowser;
+	protected final Collection<String> keyFieldNames;
 	
 	public ActiveSpacesClientService(ActiveSpacesRiverDefinition definition)
 	{
 		this.definition = definition;
 		this.metaspace = connectMetaspace();
 		this.space = getSpace();
+		this.eventBrowser = createEventBrowser();
+		this.keyFieldNames = getKeyFieldNames();
 	}
 	
-	public EventBrowser getEventBrowser()
+	public EventBrowser createEventBrowser()
 	{
 		EventBrowser eventBrowser = null;
 		EventBrowserDef eventBrowserDef = null;
@@ -65,7 +69,7 @@ public class ActiveSpacesClientService
 		
 	}
 	
-	public Browser getBrowser()
+	public Browser createGetBrowser()
 	{
 		//Create AS Browser
        	Browser browser = null;
@@ -137,5 +141,18 @@ public class ActiveSpacesClientService
         return space;
 	}
 	
+	public void cleanup()
+	{
+		try
+        {
+            if (eventBrowser != null) eventBrowser.stop();
+            if (space != null) space.close();
+            //if (metaspace != null) metaspace.closeAll();
+        }
+        catch (ASException ex)
+        {
+            ex.printStackTrace();
+        }
+	}
 	
 }

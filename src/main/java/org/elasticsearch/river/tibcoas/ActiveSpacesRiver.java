@@ -34,6 +34,7 @@ public class ActiveSpacesRiver extends AbstractRiverComponent implements
 	protected volatile Thread startupThread;
 	protected volatile Thread indexerThread;
 	protected volatile Thread statusThread;
+	protected volatile Thread cleanupThread;
 
 	@Inject
 	public ActiveSpacesRiver(RiverName riverName, RiverSettings riverSettings, Client esClient) 
@@ -48,24 +49,7 @@ public class ActiveSpacesRiver extends AbstractRiverComponent implements
 		this.activeSpacesClientService = new ActiveSpacesClientService(definition);
 		
 	}
-
-	@Override
-	public void close() 
-	{
-		logger.info("Closing river {}", riverName.getName());
-
-        // Stop the status thread completely, it will be re-started by #start()
-        if (statusThread != null) 
-        {
-            statusThread.interrupt();
-            statusThread = null;
-        }
-
-        // Cleanup the other parts (the status thread is gone, and can't do that for us anymore)
-        internalStopRiver();
-
-	}
-
+	
 	@Override
 	public void start() 
 	{
@@ -192,10 +176,53 @@ public class ActiveSpacesRiver extends AbstractRiverComponent implements
 				}
             }
         };
-        startupThread = EsExecutors.daemonThreadFactory(settings.globalSettings(), "activespaces_river_startup:" + definition.getIndexName()).newThread(
+        startupThread = EsExecutors.daemonThreadFactory(settings.globalSettings(), "activespaces_river_startup:" + definition.getRiverName()).newThread(
                 startupRunnable);
         startupThread.start();
 	}
+	
+	@Override
+	public void close() 
+	{
+		logger.info("Closing river {}", riverName.getName());
+
+        // Stop the status thread completely, it will be re-started by #start()
+        if (statusThread != null) 
+        {
+            statusThread.interrupt();
+            statusThread = null;
+        }
+        
+        // Cleanup the other parts (the status thread is gone, and can't do that for us anymore)
+        internalStopRiver();
+        /*
+        Runnable cleanupRunnable = new Runnable(){
+
+			@Override
+			public void run() 
+			{
+				
+		        //Stop event browser and close space, metaspace connections
+		        logger.info("Stopping event browser...");
+		        logger.info("Closing connections to space [{}]...", definition.getSpaceName());
+		        try 
+		        {
+					Thread.sleep(10000);
+				} catch (InterruptedException e) 
+		        {
+					e.printStackTrace();
+				}
+		      	activeSpacesClientService.cleanup();
+		      	
+		      	logger.info("Stopped river {}", riverName.getName());
+				
+			}};
+			cleanupThread = EsExecutors.daemonThreadFactory(settings.globalSettings(), "activespaces_river_cleanup:" + definition.getRiverName()).newThread(
+					cleanupRunnable);
+			cleanupThread.start();
+			*/
+	}
+
 
 	public void internalStopRiver() 
 	{
@@ -213,8 +240,7 @@ public class ActiveSpacesRiver extends AbstractRiverComponent implements
                 indexerThread.interrupt();
                 indexerThread = null;
             }
-            
-            logger.info("Stopped river {}", riverName.getName());
+          	
         } 
         catch (Throwable t) 
         {
